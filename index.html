@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lorcana — Set 8 Browser</title>
+  <style>
+    :root {
+      --bg: #0f1226;
+      --panel: #171a36;
+      --panel-2: #1e2247;
+      --text: #eef1ff;
+      --muted: #9aa3c7;
+      --accent: #7aa2ff;
+      --accent-2: #a172ff;
+      --ring: #3a5bd9;
+      --danger: #ff6b6b;
+    }
+    html, body {
+      height: 100%;
+      background: radial-gradient(1200px 800px at 20% -10%, #1c214a 0%, var(--bg) 40%), var(--bg);
+      color: var(--text);
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    }
+    .app { display: grid; grid-template-rows: auto auto 1fr; min-height: 100dvh; }
+    header { padding: 18px 20px 10px; position: relative; } /* (set mgmt) make room for top-right controls */
+    .title { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    .controls { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px 20px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+      border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .control-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .control { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 8px 10px; display: inline-flex; align-items: center; gap: 8px; }
+    .control label { font-size: 12px; color: var(--muted); }
+    .control select, .control input[type="number"], .control input[type="text"], .control .pill { background: var(--panel-2); color: var(--text); border: 1px solid rgba(255,255,255,0.08); padding: 6px 8px; border-radius: 8px; font-size: 13px; outline: none; }
+    .btn { cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: var(--panel-2); color: var(--text); padding: 8px 10px; border-radius: 12px; font-weight: 600; transition: transform .08s ease, box-shadow .2s ease; }
+    .btn:hover { box-shadow: 0 0 0 3px rgba(122,162,255,.22); }
+    .btn[aria-pressed="true"] { outline: 2px solid var(--accent); }
+
+    .grid-controls { display: flex; align-items: center; gap: 10px; }
+    .range { accent-color: var(--accent); }
+
+    .content { padding: 16px 20px 50px; }
+
+    .gallery { --cols: 6; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 14px; }
+    .list .gallery { grid-template-columns: 1fr; }
+
+    .card { position: relative; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform .18s ease, box-shadow .25s ease; }
+    .card:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 24px rgba(0,0,0,0.35); }
+    .card .thumb { aspect-ratio: 2.5/3.5; width: 100%; display: block; object-fit: cover; background: #0a0c1b; }
+    /* Removed caption under cards per request */
+
+    /* List item layout */
+    .list-item { display: grid; grid-template-columns: 80px 1fr auto; gap: 12px; align-items: center; padding: 10px; }
+    .list-item .name { font-size: 15px; }
+
+    .empty, .error, .loading { text-align: center; color: var(--muted); padding: 40px 0; }
+
+    /* (set mgmt) Top-right controls */
+    .top-right { position: absolute; top: 12px; right: 20px; display: inline-flex; gap: 8px; align-items: center; }
+    .top-right label { font-size: 12px; color: var(--muted); }
+    .top-right .inline { display: inline-flex; gap: 6px; align-items: center; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 50; }
+    .modal { width: min(1100px, 95vw); height: min(86dvh, 900px); background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; position: relative; }
+    .modal-left { background: #0a0c1b; display: grid; place-items: center; position: relative; }
+    .modal-right { padding: 18px; overflow: auto; }
+    .modal-title { font-size: 22px; font-weight: 800; margin: 4px 0 10px; }
+    .rules-text { white-space: pre-wrap; font-size: 14px; margin: 0 0 14px; color: var(--text); }
+    .kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; }
+    .kv .chip { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; padding: 10px; display: grid; gap: 6px; }
+    .kv .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .3px; }
+    .modal-close { position: absolute; top: 10px; right: 10px; }
+    .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.2); padding: 10px 12px; border-radius: 999px; cursor: pointer; user-select: none; }
+    .nav-arrow:hover { background: rgba(0,0,0,0.6); }
+    .nav-left { left: 10px; }
+    .nav-right { right: 10px; }
+
+    /* Small screens */
+    @media (max-width: 900px) {
+      .modal { grid-template-columns: 1fr; height: 92dvh; }
+    }
+    @media (max-width: 720px) {
+      /* Mobile: default to 2 cols and lock the slider */
+      .gallery { --cols: 2 !important; }
+      #gridControls { display: none !important; }
+      .control-row, .control { width: 100%; }
+      .control { display: grid; grid-template-columns: 1fr; }
+      .control select, .control input[type="number"], .control input[type="text"] { width: 100%; box-sizing: border-box; }
+      /* Collapse advanced filters */
+      #moreFilters { display: none; }
+      #toggleFilters { display: inline-flex; }
+      /* (set mgmt) Let the top-right wrap nicely on mobile */
+      .top-right { position: static; padding-top: 8px; justify-content: flex-end; flex-wrap: wrap; }
+      .top-right select { width: 160px; }
+    }
+    @media (min-width: 721px) {
+      #toggleFilters { display: none; }
+      #moreFilters { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="title">Lorcana — Set 8 Cards</div>
+      <div class="subtitle">Sortable, filterable gallery. Hover to zoom; click for full-card view.</div>
+
+      <!-- (set mgmt) Top-right toggle + selects -->
+      <div class="top-right" id="setControls">
+        <div class="inline">
+          <label for="multiToggle">Multi-set</label>
+          <input type="checkbox" id="multiToggle" />
+        </div>
+        <select id="setSingle" title="Set"></select>
+        <select id="setMulti" title="Sets" multiple size="3" style="display:none; min-width:120px"></select>
+      </div>
+    </header>
+
+    <section class="controls" id="controls">
+      <div class="control-row">
+        <div class="control">
+          <label for="search">Search</label>
+          <input id="search" type="text" placeholder="Card name…" />
+        </div>
+        <div class="control">
+          <label for="sort">Sort by</label>
+          <select id="sort">
+            <option value="collector_number" selected>Number</option>
+            <option value="name">Name</option>
+            <option value="cost">Cost</option>
+            <option value="ink">Ink</option>
+            <option value="strength">Strength</option>
+            <option value="willpower">Willpower</option>
+            <option value="lore">Lore</option>
+          </select>
+          <button class="btn" id="dir" title="Toggle sort direction" aria-pressed="false">Asc</button>
+        </div>
+        <div class="control">
+          <label>View</label>
+          <button class="btn" id="gridBtn" aria-pressed="true">Grid</button>
+          <button class="btn" id="listBtn" aria-pressed="false">List</button>
+        </div>
+        <div class="control grid-controls" id="gridControls">
+          <label for="cols">Grid columns</label>
+          <input class="range" id="cols" type="range" min="4" max="8" step="1" value="6" />
+          <span id="colsVal" class="pill">6</span>
+        </div>
+        <button class="btn" id="toggleFilters" aria-expanded="false">Show more</button>
+      </div>
+
+      <div id="moreFilters">
+        <div class="control-row">
+          <div class="control">
+            <label>Inkwell</label>
+            <select id="inkwell">
+              <option value="any">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Ink</label>
+            <select id="ink" multiple size="3" style="min-width:140px"></select>
+          </div>
+          <div class="control">
+            <label>Type</label>
+            <select id="type" multiple size="3" style="min-width:160px"></select>
+          </div>
+          <div class="control">
+            <label>Classifications</label>
+            <select id="classifications" multiple size="4" style="min-width:220px"></select>
+          </div>
+          <div class="control">
+            <label>Cost</label>
+            <input id="costMin" type="number" min="0" placeholder="min" style="width:74px" />
+            <span>–</span>
+            <input id="costMax" type="number" min="0" placeholder="max" style="width:74px" />
+          </div>
+          <div class="control">
+            <label>Strength</label>
+            <input id="strMin" type="number" min="0" placeholder="min" style="width:74px" />
+            <span>–</span>
+            <input id="strMax" type="number" min="0" placeholder="max" style="width:74px" />
+          </div>
+          <div class="control">
+            <label>Willpower</label>
+            <input id="wpMin" type="number" min="0" placeholder="min" style="width:74px" />
+            <span>–</span>
+            <input id="wpMax" type="number" min="0" placeholder="max" style="width:74px" />
+          </div>
+          <div class="control">
+            <label>Lore</label>
+            <input id="loreMin" type="number" min="0" placeholder="min" style="width:74px" />
+            <span>–</span>
+            <input id="loreMax" type="number" min="0" placeholder="max" style="width:74px" />
+          </div>
+          <button class="btn" id="reset">Reset filters</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="content" id="content">
+      <div id="status" class="loading">Loading set 8 cards…</div>
+      <div id="gallery" class="gallery" aria-live="polite" hidden></div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <button class="btn modal-close" id="closeModal" aria-label="Close">✕</button>
+      <div class="modal-left">
+        <button class="nav-arrow nav-left" id="prevBtn" aria-label="Previous">◀</button>
+        <img id="modalImg" alt="Card image" style="width:min(92%,520px); height:auto; display:block;" />
+        <button class="nav-arrow nav-right" id="nextBtn" aria-label="Next">▶</button>
+      </div>
+      <div class="modal-right">
+        <div id="modalTitle" class="modal-title"></div>
+        <div id="modalText" class="rules-text"></div>
+        <div class="kv" id="modalKV"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://api.lorcast.com/v0/cards/search?q=';
+    const UNIQUE = '&unique=prints'; // include all prints
+
+    let allCards = [];
+    let filtered = [];
+    let state = {
+      sort: 'collector_number', dir: 'asc', view: 'grid', cols: 6,
+      search: '', inkwell: 'any', ink: new Set(), type: new Set(), classifications: new Set(),
+      costMin: '', costMax: '', strMin: '', strMax: '', wpMin: '', wpMax: '', loreMin: '', loreMax: '',
+      /* (set mgmt) */
+      multiSets: false,
+      sets: new Set(['8'])
+    };
+
+    let currentIndex = -1; // for modal navigation
+    const $ = (id) => document.getElementById(id);
+
+    // --- Robust status helpers (fix for null status element) ---
+    function ensureStatus(){
+      let el = $('status');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'status';
+        el.className = 'loading';
+        el.textContent = '';
+        const content = $('content');
+        if (content) content.prepend(el); else document.body.prepend(el);
+      }
+      return el;
+    }
+    function setStatus(mode, message=''){
+      const el = ensureStatus();
+      if (mode === 'hidden') {
+        el.hidden = true;
+        el.className = 'loading';
+        el.textContent = '';
+      } else {
+        el.hidden = false;
+        el.className = mode; // 'loading' | 'error' | 'empty' | 'info'
+        el.textContent = message;
+      }
+    }
+
+    async function boot() {
+      try {
+        buildSetOptions();
+        await loadSets();
+        if (allCards.length === 0) throw new Error('No cards found for selected set(s).');
+        buildFacetOptions(allCards);
+        setStatus('hidden'); // do NOT remove; keep for future fetches
+        $('gallery').hidden = false;
+        apply();
+      } catch (err) {
+        setStatus('error', `Failed to load cards: ${err.message}.`);
+      }
+    }
+
+    function normalize(c) {
+      return {
+        id: c.id,
+        name: c.name || 'Unknown',
+        version: c.version || '',
+        released_at: c.released_at || '1970-01-01',
+        imgSmall: c.image_uris?.digital?.small || '',
+        imgNormal: c.image_uris?.digital?.normal || '',
+        imgLarge: c.image_uris?.digital?.large || '',
+        cost: num(c.cost),
+        inkwell: !!c.inkwell,
+        ink: c.ink || '',
+        type: Array.isArray(c.type) ? c.type : [],
+        classifications: Array.isArray(c.classifications) ? c.classifications : [],
+        strength: num(c.strength),
+        willpower: num(c.willpower),
+        lore: num(c.lore),
+        rarity: c.rarity || '',
+        text: c.text || '',
+        collector_number: String(c.collector_number || ''),
+        set: c.set?.name || '',
+        setCode: String(c.set?.code || '')
+      };
+    }
+
+    const num = (v) => (v === null || v === undefined || Number.isNaN(v)) ? null : Number(v);
+
+    function buildFacetOptions(cards) {
+      const distinct = (arr) => Array.from(new Set(arr)).filter(Boolean).sort((a,b)=> String(a).localeCompare(String(b)));
+      const inks = distinct(cards.map(c => c.ink));
+      const types = distinct(cards.flatMap(c => c.type));
+      const cls = distinct(cards.flatMap(c => c.classifications));
+      fillOptions('ink', inks);
+      fillOptions('type', types);
+      fillOptions('classifications', cls);
+    }
+
+    function fillOptions(id, options) {
+      const el = $(id); el.innerHTML = '';
+      for (const v of options) { const opt = document.createElement('option'); opt.value = v; opt.textContent = v; el.appendChild(opt); }
+    }
+
+    function getMultiSelectValues(id) { return new Set(Array.from($(id).selectedOptions).map(o => o.value)); }
+
+    function apply() { filtered = allCards.filter(passFilters); sortCards(filtered); render(filtered); }
+
+    function passFilters(c) {
+      if (state.search) {
+        const q = state.search.toLowerCase();
+        if (!(c.name.toLowerCase().includes(q) || c.version.toLowerCase().includes(q))) return false;
+      }
+      if (state.inkwell !== 'any') { const want = state.inkwell === 'true'; if (c.inkwell !== want) return false; }
+      if (state.ink.size && !state.ink.has(c.ink)) return false;
+      if (state.type.size && !c.type.some(t => state.type.has(t))) return false;
+      if (state.classifications.size && !c.classifications.some(t => state.classifications.has(t))) return false;
+      if (!rangeOkMaybe(c.cost, state.costMin, state.costMax)) return false;
+      if (!rangeOkMaybe(c.strength, state.strMin, state.strMax)) return false;
+      if (!rangeOkMaybe(c.willpower, state.wpMin, state.wpMax)) return false;
+      if (!rangeOkMaybe(c.lore, state.loreMin, state.loreMax)) return false;
+      return true;
+    }
+
+    function rangeOkMaybe(val, min, max) {
+      if (min === '' && max === '') return true;
+      if (val === null) return false;
+      if (min !== '' && val < Number(min)) return false;
+      if (max !== '' && val > Number(max)) return false;
+      return true;
+    }
+
+    function sortCards(arr) {
+      const dir = state.dir === 'asc' ? 1 : -1;
+      const key = state.sort;
+      const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
+      arr.sort((a,b) => {
+        if (key === 'collector_number' && state.multiSets) {
+          const s = collator.compare(String(a.setCode), String(b.setCode));
+          if (s !== 0) return s * dir;
+        }
+        let va = a[key], vb = b[key];
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+        return collator.compare(String(va ?? ''), String(vb ?? '')) * dir;
+      });
+    }
+
+    function render(cards) {
+      const gallery = $('gallery');
+      gallery.style.setProperty('--cols', state.view === 'grid' ? state.cols : 1);
+      document.body.classList.toggle('list', state.view === 'list');
+      gallery.innerHTML = '';
+      if (cards.length === 0) { gallery.innerHTML = '<div class="empty">No cards match your filters.</div>'; return; }
+      cards.forEach((c, idx) => { const el = (state.view === 'grid') ? renderGridCard(c, idx) : renderListItem(c, idx); gallery.appendChild(el); });
+    }
+
+    function renderGridCard(c, idx) {
+      const card = document.createElement('article'); card.className = 'card'; card.tabIndex = 0;
+      const img = document.createElement('img'); img.className = 'thumb'; img.loading = 'lazy'; img.alt = `${c.name} — ${c.version}`; img.src = c.imgNormal || c.imgSmall;
+      card.append(img);
+      card.addEventListener('click', () => openModalByIndex(idx));
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter') openModalByIndex(idx); });
+      return card;
+    }
+
+    function renderListItem(c, idx) {
+      const card = document.createElement('article'); card.className = 'card list-item'; card.tabIndex = 0;
+      const img = document.createElement('img'); img.className = 'thumb'; img.loading = 'lazy'; img.alt = `${c.name} — ${c.version}`; img.src = c.imgSmall || c.imgNormal;
+      const title = document.createElement('div'); title.className = 'name'; title.textContent = c.version ? `${c.name} — ${c.version}` : c.name;
+      const right = document.createElement('div'); right.style.display='flex'; right.style.gap='8px'; right.style.alignItems='center';
+      right.innerHTML = [ badge('Cost', c.cost), badge('Ink', c.ink || '—'), badge('Str', c.strength ?? '—'), badge('WP', c.willpower ?? '—'), badge('Lore', c.lore ?? '—') ].join('');
+      card.append(img, title, right);
+      card.addEventListener('click', () => openModalByIndex(idx));
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter') openModalByIndex(idx); });
+      return card;
+    }
+
+    function badge(label, value) { return `<span class="pill" title="${label}">${value}</span>`; }
+
+    function openModalByIndex(idx) { currentIndex = idx; openModal(filtered[currentIndex]); }
+
+    function openModal(c) {
+      $('modal').style.display = 'grid';
+      $('modalImg').src = c.imgLarge || c.imgNormal || c.imgSmall;
+      $('modalImg').alt = `${c.name} — ${c.version}`;
+      $('modalTitle').textContent = c.version ? `${c.name} — ${c.version}` : c.name;
+      $('modalText').textContent = c.text || '';
+      const kv = [
+        ['Cost', c.cost],
+        ['Inkwell', c.inkwell ? 'Yes' : 'No'],
+        ['Ink', c.ink || '—'],
+        ['Type', c.type.join(', ') || '—'],
+        ['Classifications', c.classifications.join(', ') || '—'],
+        ['Strength', c.strength ?? '—'],
+        ['Willpower', c.willpower ?? '—'],
+        ['Lore', c.lore ?? '—'],
+      ];
+      $('modalKV').innerHTML = kv.map(([k,v]) => `<div class="chip"><div class="k">${k}</div><div>${escapeHtml(String(v))}</div></div>`).join('');
+      $('closeModal').focus();
+    }
+
+    function closeModal(){ $('modal').style.display = 'none'; currentIndex = -1; }
+    function nextCard(){ if (currentIndex < 0) return; currentIndex = (currentIndex + 1) % filtered.length; openModal(filtered[currentIndex]); }
+    function prevCard(){ if (currentIndex < 0) return; currentIndex = (currentIndex - 1 + filtered.length) % filtered.length; openModal(filtered[currentIndex]); }
+
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\'':'&#39;'}[m])); }
+
+    // Wire up controls
+    function wire() {
+      $('search').addEventListener('input', debounce((e)=>{ state.search = e.target.value.trim(); apply(); }, 200));
+      $('sort').addEventListener('change', (e)=>{ state.sort = e.target.value; apply(); });
+      $('dir').addEventListener('click', (e)=>{ state.dir = state.dir === 'asc' ? 'desc' : 'asc'; e.currentTarget.textContent = state.dir === 'asc' ? 'Asc' : 'Desc'; e.currentTarget.setAttribute('aria-pressed', String(state.dir!=='asc')); apply(); });
+      $('gridBtn').addEventListener('click', ()=>{ state.view='grid'; $('gridBtn').setAttribute('aria-pressed','true'); $('listBtn').setAttribute('aria-pressed','false'); apply(); });
+      $('listBtn').addEventListener('click', ()=>{ state.view='list'; $('gridBtn').setAttribute('aria-pressed','false'); $('listBtn').setAttribute('aria-pressed','true'); apply(); });
+      $('cols').addEventListener('input', (e)=>{ state.cols = Number(e.target.value); $('colsVal').textContent = String(state.cols); apply(); });
+
+      $('inkwell').addEventListener('change', (e)=>{ state.inkwell = e.target.value; apply(); });
+      $('ink').addEventListener('change', ()=>{ state.ink = getMultiSelectValues('ink'); apply(); });
+      $('type').addEventListener('change', ()=>{ state.type = getMultiSelectValues('type'); apply(); });
+      $('classifications').addEventListener('change', ()=>{ state.classifications = getMultiSelectValues('classifications'); apply(); });
+
+      for (const id of ['costMin','costMax','strMin','strMax','wpMin','wpMax','loreMin','loreMax']) {
+        $(id).addEventListener('input', debounce(()=>{ state[id] = $(id).value.trim(); apply(); }, 200));
+      }
+
+      $('reset').addEventListener('click', ()=>{ resetFilters(); apply(); });
+
+      $('closeModal').addEventListener('click', closeModal);
+      $('modal').addEventListener('click', (e)=>{ if (e.target === $('modal')) closeModal(); });
+      document.addEventListener('keydown', (e)=>{
+        if ($('modal').style.display === 'grid') {
+          if (e.key === 'Escape') closeModal();
+          if (e.key === 'ArrowRight') nextCard();
+          if (e.key === 'ArrowLeft') prevCard();
+        }
+      });
+      $('nextBtn').addEventListener('click', nextCard);
+      $('prevBtn').addEventListener('click', prevCard);
+
+      // Mobile swipe in modal
+      let startX = null;
+      $('modal').addEventListener('touchstart', (e)=>{ startX = e.changedTouches[0].clientX; }, {passive:true});
+      $('modal').addEventListener('touchend', (e)=>{
+        if (startX === null) return; const dx = e.changedTouches[0].clientX - startX; startX = null;
+        if (Math.abs(dx) > 40) { if (dx < 0) nextCard(); else prevCard(); }
+      }, {passive:true});
+
+      // Show more (mobile)
+      $('toggleFilters').addEventListener('click', () => {
+        const more = $('moreFilters');
+        const expanded = $('toggleFilters').getAttribute('aria-expanded') === 'true';
+        $('toggleFilters').setAttribute('aria-expanded', String(!expanded));
+        $('toggleFilters').textContent = expanded ? 'Show more' : 'Show less';
+        more.style.display = expanded ? 'none' : 'block';
+      });
+
+      /* (set mgmt) UI events */
+      const toggle = $('multiToggle');
+      const single = $('setSingle');
+      const multi = $('setMulti');
+
+      toggle.addEventListener('change', async () => {
+        state.multiSets = toggle.checked;
+        single.style.display = state.multiSets ? 'none' : '';
+        multi.style.display = state.multiSets ? '' : 'none';
+        await loadSets(); buildFacetOptions(allCards); apply();
+      });
+      single.addEventListener('change', async () => {
+        state.sets = new Set([single.value || '8']);
+        await loadSets(); buildFacetOptions(allCards); apply();
+      });
+      multi.addEventListener('change', async () => {
+        const vals = Array.from(multi.selectedOptions).map(o=>o.value);
+        state.sets = new Set(vals.length ? vals : ['8']);
+        await loadSets(); buildFacetOptions(allCards); apply();
+      });
+    }
+
+    function resetFilters(){
+      state = { ...state, search:'', inkwell:'any', ink:new Set(), type:new Set(), classifications:new Set(),
+        costMin:'', costMax:'', strMin:'', strMax:'', wpMin:'', wpMax:'', loreMin:'', loreMax:'' };
+      $('search').value=''; $('inkwell').value='any';
+      for (const id of ['ink','type','classifications']) { const el=$(id); Array.from(el.options).forEach(o=>o.selected=false); }
+      for (const id of ['costMin','costMax','strMin','strMax','wpMin','wpMax','loreMin','loreMax']) $(id).value='';
+    }
+
+    function debounce(fn, ms=250){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), ms); }; }
+
+    /* (set mgmt) Build set options and fetch */
+    function buildSetOptions(){
+      const opts = Array.from({length: 12}, (_,i)=> String(i+1));
+      const single = $('setSingle'); const multi = $('setMulti');
+      single.innerHTML = ''; multi.innerHTML = '';
+      for (const code of opts){
+        const o1 = document.createElement('option'); o1.value = code; o1.textContent = code; if (code==='8') o1.selected = true; single.appendChild(o1);
+        const o2 = document.createElement('option'); o2.value = code; o2.textContent = code; if (code==='8') o2.selected = true; multi.appendChild(o2);
+      }
+    }
+
+    async function loadSets(){
+      const codes = Array.from(state.sets);
+      const q = codes.length > 1 ? codes.map(s=>`set:${s}`).join(' or ') : `set:${codes[0] || '8'}`;
+      const url = `${API}${encodeURIComponent(q)}${UNIQUE}`;
+      setStatus('loading', 'Loading cards…');
+      $('gallery').hidden = true;
+      let res;
+      try {
+        res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      } catch (e) {
+        setStatus('error', `Network error while loading cards.`);
+        $('gallery').hidden = false;
+        allCards = [];
+        return;
+      }
+      if (!res.ok) {
+        setStatus('error', `Failed to load cards: HTTP ${res.status}`);
+        $('gallery').hidden = false;
+        allCards = [];
+        return;
+      }
+      const data = await res.json();
+      allCards = (data.results || []).map(normalize);
+      setStatus('hidden');
+      $('gallery').hidden = false;
+    }
+
+    // --- Lightweight self-tests (console only) ---
+    function runSelfTests(){
+      const results = [];
+      // Test 1: ensureStatus recreates missing node
+      const s = $('status'); if (s) s.remove();
+      setStatus('loading', 'testing');
+      results.push({name:'status recreated', pass: !!$('status')});
+      // Test 2: hide status
+      setStatus('hidden');
+      results.push({name:'status hidden', pass: $('status').hidden === true});
+      // Test 3: sorting by number groups by set when multiSets
+      const sample = [
+        { collector_number: '10', setCode: '2' },
+        { collector_number: '2', setCode: '1' },
+        { collector_number: '1', setCode: '2' },
+      ];
+      const prevSort = state.sort, prevMulti = state.multiSets;
+      state.sort = 'collector_number'; state.multiSets = true;
+      sortCards(sample);
+      const okOrder = sample[0].setCode==='1' && sample[0].collector_number==='2';
+      results.push({name:'number sort groups by set', pass: okOrder});
+      state.sort = prevSort; state.multiSets = prevMulti;
+      console.log('[Self-tests]', results);
+    }
+
+    wire();
+    boot();
+    // Run tests after initial boot (non-blocking)
+    setTimeout(runSelfTests, 0);
+  </script>
+</body>
+</html>
