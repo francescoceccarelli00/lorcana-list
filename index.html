@@ -37,9 +37,72 @@
     .chip{background:#0c0f16;border:1px solid rgba(255,255,255,.06);padding:8px 10px;border-radius:999px;color:var(--muted)}
     .chip select,.chip input{background:transparent;border:0;color:inherit;outline:none}
 
-    /* Mobile: search docked at bottom */
+    /* ===== Mobile UX ===== */
+
+    /* Tablet & smaller: il pannello selezione è ridondante col FAB+modal → lo nascondiamo */
+    @media (max-width: 1024px){
+      .selection{display:none}
+      .app{grid-template-columns:1fr;margin:96px auto 160px;padding:0 12px}
+    }
+
+    /* Smartphone: searchbar in basso, chip a capo, modal full-screen */
     @media (max-width: 720px){
-      header.searchbar{top:auto;bottom:12px}
+      header.searchbar{top:auto;bottom:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+      header .search-wrap{
+        flex-wrap:wrap;border-radius:18px;padding:8px;gap:8px;
+        width:100%;max-width:none;
+      }
+      .search-wrap input[type="search"]{
+        flex:1 1 100%;width:100%;
+        font-size:16px; /* evita lo zoom automatico al focus su iOS */
+        padding:11px 14px;
+      }
+      .search-wrap input[type="search"]::placeholder{font-size:14px}
+      .search-wrap .filter{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:6px}
+      .chip{font-size:13px;padding:6px 10px;flex-shrink:0}
+      .chip input[type="number"]{width:50px}
+
+      .app{margin:20px auto 220px}
+      .catalog .grid{gap:8px;padding:8px}
+      .card .meta{padding:8px;gap:5px}
+      .meta .title{font-size:13px}
+      .meta .sub{font-size:11px}
+      .card button.add{padding:9px;font-size:13px}
+
+      /* FAB sopra alla searchbar (che è in basso) */
+      .basket-fab{
+        right:12px;
+        bottom:calc(env(safe-area-inset-bottom) + 130px);
+        padding:14px 18px;font-size:14px;
+      }
+
+      /* Modal a tutto schermo per dare respiro */
+      dialog#basketModal[open]{
+        display:flex;flex-direction:column;
+        width:100vw;max-width:none;
+        height:100dvh;max-height:100dvh;
+        border-radius:0;margin:0;padding:0;
+      }
+      .modal-head{padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top))}
+      .modal-head .trash{padding:10px 16px;font-size:14px}
+      .modal-body{flex:1;max-height:none;padding:12px;padding-bottom:6px}
+      .modal-foot{padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+
+      /* Touch target più grandi nel modal */
+      dialog .item{grid-template-columns:56px 1fr auto;padding:10px;gap:12px}
+      dialog .item img{width:56px;height:75px}
+      dialog .item .name{font-size:14px}
+      dialog .qty{gap:6px}
+      dialog .qty button{width:38px;height:38px;font-size:16px}
+      dialog .qty span{min-width:24px;font-size:14px}
+      dialog .trash{padding:8px 10px;font-size:14px}
+    }
+
+    /* Smartphone molto stretti */
+    @media (max-width: 380px){
+      .search-wrap .filter{gap:4px}
+      .chip{font-size:12px;padding:5px 8px}
+      .chip input[type="number"]{width:44px}
     }
 
     /* Left: catalog list */
