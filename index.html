@@ -42,7 +42,7 @@
     /* Tablet & smaller: il pannello selezione è ridondante col FAB+modal → lo nascondiamo */
     @media (max-width: 1024px){
       .selection{display:none}
-      .app{grid-template-columns:1fr;margin:96px auto 160px;padding:0 12px}
+      .app{grid-template-columns:1fr;margin:96px auto 40px;padding:0 12px}
     }
 
     /* Smartphone: searchbar in basso, chip a capo, modal full-screen */
@@ -62,18 +62,18 @@
       .chip{font-size:13px;padding:6px 10px;flex-shrink:0}
       .chip input[type="number"]{width:50px}
 
-      .app{margin:20px auto 220px}
+      .app{margin:72px auto 160px} /* top:72 lascia spazio al FAB, bottom:160 alla searchbar */
       .catalog .grid{gap:8px;padding:8px}
       .card .meta{padding:8px;gap:5px}
       .meta .title{font-size:13px}
       .meta .sub{font-size:11px}
       .card button.add{padding:9px;font-size:13px}
 
-      /* FAB sopra alla searchbar (che è in basso) */
+      /* FAB in alto a destra: searchbar è in basso, quindi nessun conflitto */
       .basket-fab{
         right:12px;
-        bottom:calc(env(safe-area-inset-bottom) + 130px);
-        padding:14px 18px;font-size:14px;
+        top:calc(env(safe-area-inset-top) + 12px);
+        padding:12px 16px;font-size:14px;
       }
 
       /* Modal a tutto schermo per dare respiro */
@@ -170,8 +170,8 @@
     .make-pdf button:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(.3)}
     .pdf-hint{font-size:11px;color:var(--muted);text-align:center}
 
-    /* Mobile: floating basket */
-    .basket-fab{display:none;position:fixed;right:14px;bottom:90px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#0b0e15;border:0;border-radius:999px;padding:12px 14px;font-weight:800;box-shadow:var(--card-shadow);z-index:40}
+    /* Mobile: floating basket (top-right) */
+    .basket-fab{display:none;position:fixed;right:14px;top:calc(env(safe-area-inset-top) + 14px);background:linear-gradient(135deg,var(--brand),var(--accent));color:#0b0e15;border:0;border-radius:999px;padding:12px 14px;font-weight:800;box-shadow:var(--card-shadow);z-index:60}
     @media (max-width:1024px){.basket-fab{display:inline-flex;align-items:center;gap:8px}}
 
     dialog#basketModal{border:0;border-radius:18px;background:#0d111a;color:var(--fg);padding:0;width:min(92vw,720px)}
@@ -269,6 +269,12 @@
     // Utility: debounce
     function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); } }
 
+    // Su mobile usiamo la qualità "normal" (media) invece di "small": display retina più nitidi.
+    const MOBILE_MQ = window.matchMedia('(max-width: 720px)');
+    function thumbUrl(card){
+      return MOBILE_MQ.matches ? (card.__normal || card.__small) : card.__small;
+    }
+
     function renderSkeletons(n = 12){
       const wrap = document.getElementById('cardsList');
       wrap.innerHTML = '';
@@ -309,6 +315,7 @@
             __setCode: c.set?.code ? String(c.set.code) : '',
             __setName: c.set?.name || '',
             __small: c.image_uris.digital.small,
+            __normal: c.image_uris.digital.normal || c.image_uris.digital.small,
             __large: c.image_uris.digital.large,
             __full: c.image_uris.digital.full || '',
             __search: [c.name, c.version, c.text, c.classifications?.join(' '), c.type?.join(' '), c.set?.name].filter(Boolean).join(' ').toLowerCase()
@@ -345,7 +352,7 @@
         const inkDot = inkName ? `<span class="ink-dot ink-${escapeHtml(inkName)}" title="${escapeHtml(inkName)}"></span>` : '';
         el.innerHTML = `
           ${inBasketQty ? `<span class="basket-badge" data-badge>×${inBasketQty}</span>` : ''}
-          <img src="${card.__small}" alt="${escapeHtml(card.name)}" loading="lazy"/>
+          <img src="${thumbUrl(card)}" alt="${escapeHtml(card.name)}" loading="lazy"/>
           <div class="meta">
             <div class="title">${escapeHtml(card.name)}${card.version?` — ${escapeHtml(card.version)}`:''}</div>
             <div class="sub">${inkDot}<span>${escapeHtml(inkName || 'No Ink')} • Cost ${card.cost ?? '-'} • Set ${card.__setCode}</span></div>
@@ -429,7 +436,7 @@
           const inkName = card.ink || '';
           const inkDot = inkName ? `<span class="ink-dot ink-${escapeHtml(inkName)}"></span>` : '';
           row.innerHTML = `
-            <img src="${card.__small}" alt="${escapeHtml(card.name)}"/>
+            <img src="${thumbUrl(card)}" alt="${escapeHtml(card.name)}"/>
             <div class="info">
               <div class="name">${escapeHtml(card.name)} ${card.version?`<span class="muted">— ${escapeHtml(card.version)}</span>`:''}</div>
               <div class="muted" style="display:flex;align-items:center;gap:6px">${inkDot}<span>Set ${card.__setCode} • Cost ${card.cost ?? '-'}</span></div>
