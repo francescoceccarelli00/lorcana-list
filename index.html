@@ -219,7 +219,7 @@
   <main class="app" aria-live="polite">
     <section class="catalog" aria-label="Lista carte disponibili">
       <div class="toolbar">
-        <div>Catalogo Lorcana – set ordinati 12 → 1</div>
+        <div>Catalogo Lorcana – set ordinati 13 → 1</div>
         <div id="resultCount" class="muted"></div>
       </div>
       <div id="cardsList" class="grid">
@@ -294,8 +294,8 @@
         const setsResponse = await fetch('https://api.lorcast.com/v0/sets', { headers: { 'Accept': 'application/json' } });
         if (!setsResponse.ok) throw new Error(`Errore HTTP ${setsResponse.status}`);
         const setsData = await setsResponse.json();
-        let sets = (setsData.results || []).filter(s => /^(?:12|11|10|9|8|7|6|5|4|3|2|1)$/.test(String(s.code)));
-        // Order 12 -> 1
+        let sets = (setsData.results || []).filter(s => /^(?:13|12|11|10|9|8|7|6|5|4|3|2|1)$/.test(String(s.code)));
+        // Order 13 -> 1
         sets.sort((a,b)=> Number(b.code) - Number(a.code));
 
         const cardsPromises = sets.map(set =>
@@ -320,7 +320,7 @@
             __full: c.image_uris.digital.full || '',
             __search: [c.name, c.version, c.text, c.classifications?.join(' '), c.type?.join(' '), c.set?.name].filter(Boolean).join(' ').toLowerCase()
           }))
-          // Sort by set desc (12->1), then by collector_number asc (numeric-ish)
+          // Sort by set desc (13->1), then by collector_number asc (numeric-ish)
           .sort((a,b)=> Number(b.__setCode||0) - Number(a.__setCode||0) || (parseInt(a.collector_number) || 0) - (parseInt(b.collector_number) || 0));
 
         console.log(`✅ Caricate ${ALL_CARDS.length} carte totali.`);
