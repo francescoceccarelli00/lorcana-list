@@ -4,187 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LorcanaPrint - Non si fa</title>
-  <style>
-    :root{
-      --bg:#0f1115; /* charcoal */
-      --panel:#141821; /* slightly lighter */
-      --muted:#98a2b3; /* gray-400 */
-      --fg:#e5e7eb; /* gray-100 */
-      --brand:#6ee7ff; /* cyan */
-      --accent:#a78bfa; /* violet */
-      --danger:#ef4444;
-      --success:#10b981;
-      --card-shadow: 0 10px 25px rgba(0,0,0,.25);
-      --radius: 16px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,#0b0d12 0%,#0f1115 60%,#131722 100%);color:var(--fg);font:500 15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;}
+  <link rel="stylesheet" href="css/main.css" />
 
-    /* App shell */
-    .app{display:grid;grid-template-columns: 360px 1fr;gap:16px;max-width:1400px;margin:120px auto 80px;padding:0 16px}
-    @media (max-width: 1024px){.app{grid-template-columns: 1fr;gap:12px;margin:100px auto 90px}}
-
-    header.searchbar{
-      position:fixed;left:0;right:0;top:16px;z-index:50;display:flex;justify-content:center;
-      pointer-events:none;
-    }
-    header .search-wrap{pointer-events:auto;display:flex;gap:10px;align-items:center;background:rgba(20,24,33,.8);backdrop-filter: blur(10px);border:1px solid rgba(255,255,255,.08);box-shadow:var(--card-shadow);padding:10px;border-radius:999px;max-width:1000px;width:clamp(300px,90vw,1000px)}
-    .search-wrap input[type="search"]{flex:1;background:#0c0f16;border:1px solid rgba(255,255,255,.06);color:var(--fg);padding:12px 14px;border-radius:999px;outline:none}
-    .search-wrap .filter{
-      display:flex;gap:8px;align-items:center
-    }
-    .chip{background:#0c0f16;border:1px solid rgba(255,255,255,.06);padding:8px 10px;border-radius:999px;color:var(--muted)}
-    .chip select,.chip input{background:transparent;border:0;color:inherit;outline:none}
-
-    /* ===== Mobile UX ===== */
-
-    /* Tablet & smaller: il pannello selezione è ridondante col FAB+modal → lo nascondiamo */
-    @media (max-width: 1024px){
-      .selection{display:none}
-      .app{grid-template-columns:1fr;margin:96px auto 40px;padding:0 12px}
-    }
-
-    /* Smartphone: searchbar in basso, chip a capo, modal full-screen */
-    @media (max-width: 720px){
-      header.searchbar{top:auto;bottom:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
-      header .search-wrap{
-        flex-wrap:wrap;border-radius:18px;padding:8px;gap:8px;
-        width:100%;max-width:none;
-      }
-      .search-wrap input[type="search"]{
-        flex:1 1 100%;width:100%;
-        font-size:16px; /* evita lo zoom automatico al focus su iOS */
-        padding:11px 14px;
-      }
-      .search-wrap input[type="search"]::placeholder{font-size:14px}
-      .search-wrap .filter{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:6px}
-      .chip{font-size:13px;padding:6px 10px;flex-shrink:0}
-      .chip input[type="number"]{width:50px}
-
-      .app{margin:72px auto 160px} /* top:72 lascia spazio al FAB, bottom:160 alla searchbar */
-      .catalog .grid{gap:8px;padding:8px}
-      .card .meta{padding:8px;gap:5px}
-      .meta .title{font-size:13px}
-      .meta .sub{font-size:11px}
-      .card button.add{padding:9px;font-size:13px}
-
-      /* FAB in alto a destra: searchbar è in basso, quindi nessun conflitto */
-      .basket-fab{
-        right:12px;
-        top:calc(env(safe-area-inset-top) + 12px);
-        padding:12px 16px;font-size:14px;
-      }
-
-      /* Modal a tutto schermo per dare respiro */
-      dialog#basketModal[open]{
-        display:flex;flex-direction:column;
-        width:100vw;max-width:none;
-        height:100dvh;max-height:100dvh;
-        border-radius:0;margin:0;padding:0;
-      }
-      .modal-head{padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top))}
-      .modal-head .trash{padding:10px 16px;font-size:14px}
-      .modal-body{flex:1;max-height:none;padding:12px;padding-bottom:6px}
-      .modal-foot{padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-
-      /* Touch target più grandi nel modal */
-      dialog .item{grid-template-columns:56px 1fr auto;padding:10px;gap:12px}
-      dialog .item img{width:56px;height:75px}
-      dialog .item .name{font-size:14px}
-      dialog .qty{gap:6px}
-      dialog .qty button{width:38px;height:38px;font-size:16px}
-      dialog .qty span{min-width:24px;font-size:14px}
-      dialog .trash{padding:8px 10px;font-size:14px}
-    }
-
-    /* Smartphone molto stretti */
-    @media (max-width: 380px){
-      .search-wrap .filter{gap:4px}
-      .chip{font-size:12px;padding:5px 8px}
-      .chip input[type="number"]{width:44px}
-    }
-
-    /* Left: catalog list */
-    .catalog{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;min-height:60vh}
-    .catalog .toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .catalog .grid{display:grid;grid-template-columns: repeat(2, minmax(0,1fr));gap:10px;padding:12px;overflow:auto}
-    @media (min-width: 1280px){.catalog .grid{grid-template-columns: repeat(3, minmax(0,1fr));}}
-    @media (max-width: 480px){.catalog .grid{grid-template-columns: repeat(2, minmax(0,1fr));}}
-
-    .card{position:relative;background:#0b0e15;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow);display:flex;flex-direction:column;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease}
-    .card:hover{transform:translateY(-2px);border-color:rgba(110,231,255,.25);box-shadow:0 12px 28px rgba(0,0,0,.35)}
-    .card.in-basket{border-color:rgba(167,139,250,.45)}
-    .card img{width:100%;aspect-ratio: 3/4;object-fit:cover;background:#0c0f16}
-    .card .meta{padding:10px;display:grid;gap:6px}
-    .meta .title{font-weight:700;font-size:14px;line-height:1.3}
-    .meta .sub{color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-    .meta .tags{display:flex;gap:6px;flex-wrap:wrap}
-    .tag{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.07);color:#cbd5e1}
-    .ink-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
-    .ink-Amber{background:#f4b740}.ink-Amethyst{background:#a855f7}.ink-Emerald{background:#10b981}
-    .ink-Ruby{background:#ef4444}.ink-Sapphire{background:#3b82f6}.ink-Steel{background:#94a3b8}
-    .card button.add{margin-top:6px;background:linear-gradient(135deg,var(--brand),var(--accent));border:0;border-radius:10px;color:#0b0e15;font-weight:800;padding:10px;cursor:pointer;transition:transform .1s ease, filter .15s ease}
-    .card button.add:hover{filter:brightness(1.08)}
-    .card button.add:active{transform:scale(.97)}
-    .card button.add.added{background:linear-gradient(135deg,var(--success),#22d3ee);animation:pulse .35s ease}
-    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
-    .basket-badge{position:absolute;top:8px;right:8px;min-width:26px;height:26px;padding:0 8px;border-radius:999px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#0b0e15;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.4);z-index:2}
-
-    /* Skeleton loading */
-    .skeleton{background:#0b0e15;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;height:340px}
-    .skeleton::before{content:"";display:block;width:100%;aspect-ratio:3/4;background:linear-gradient(90deg,#0f1320 0%,#171c2b 50%,#0f1320 100%);background-size:200% 100%;animation:shimmer 1.4s infinite}
-    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-    /* Right: selection list */
-    .selection{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);display:flex;flex-direction:column;min-height:60vh;position:relative}
-    .selection .head{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .selection .head-actions{display:flex;align-items:center;gap:8px}
-    .icon-btn{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .15s ease}
-    .icon-btn:hover{color:var(--fg);border-color:rgba(255,255,255,.2)}
-    .icon-btn.danger:hover{color:#fecaca;border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.08)}
-    .selection .list{padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto}
-    .item{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;background:#0b0e15;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:8px;animation:slideIn .2s ease}
-    @keyframes slideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
-    .item img{width:48px;height:64px;object-fit:cover;border-radius:6px}
-    .item .info{display:grid;gap:3px;min-width:0}
-    .item .name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .item .muted{color:var(--muted);font-size:11px}
-    .qty{display:flex;align-items:center;gap:4px}
-    .qty button{width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#0c0f16;color:var(--fg);cursor:pointer;font-weight:700;font-size:14px;transition:all .12s ease}
-    .qty button:hover:not(:disabled){background:#141a26;border-color:rgba(255,255,255,.2)}
-    .qty button:disabled{opacity:.35;cursor:not-allowed}
-    .qty span{min-width:22px;text-align:center;font-weight:700;font-size:13px}
-    .trash{background:transparent;border:1px solid rgba(239,68,68,.4);color:#fecaca;border-radius:8px;padding:6px 8px;cursor:pointer;transition:background .15s ease}
-    .trash:hover{background:rgba(239,68,68,.12)}
-
-    /* Custom scrollbars */
-    .catalog .grid::-webkit-scrollbar,.selection .list::-webkit-scrollbar,.modal-body::-webkit-scrollbar{width:10px;height:10px}
-    .catalog .grid::-webkit-scrollbar-thumb,.selection .list::-webkit-scrollbar-thumb,.modal-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:999px}
-    .catalog .grid::-webkit-scrollbar-thumb:hover,.selection .list::-webkit-scrollbar-thumb:hover,.modal-body::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.15)}
-
-    .make-pdf{position:sticky;bottom:0;left:0;right:0;padding:10px;border-top:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(20,24,33,.85),rgba(20,24,33,.95));backdrop-filter:blur(8px);display:grid;gap:6px}
-    .make-pdf button{width:100%;padding:12px;border-radius:12px;border:0;cursor:pointer;background:linear-gradient(135deg,var(--success),#22d3ee);color:#081018;font-weight:900;transition:filter .15s ease, transform .1s ease}
-    .make-pdf button:hover:not(:disabled){filter:brightness(1.05)}
-    .make-pdf button:active:not(:disabled){transform:scale(.99)}
-    .make-pdf button:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(.3)}
-    .pdf-hint{font-size:11px;color:var(--muted);text-align:center}
-
-    /* Mobile: floating basket (top-right) */
-    .basket-fab{display:none;position:fixed;right:14px;top:calc(env(safe-area-inset-top) + 14px);background:linear-gradient(135deg,var(--brand),var(--accent));color:#0b0e15;border:0;border-radius:999px;padding:12px 14px;font-weight:800;box-shadow:var(--card-shadow);z-index:60}
-    @media (max-width:1024px){.basket-fab{display:inline-flex;align-items:center;gap:8px}}
-
-    dialog#basketModal{border:0;border-radius:18px;background:#0d111a;color:var(--fg);padding:0;width:min(92vw,720px)}
-    dialog::backdrop{background:rgba(0,0,0,.6)}
-    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .modal-body{max-height:65vh;overflow:auto;padding:12px}
-    .modal-foot{padding:12px;border-top:1px solid rgba(255,255,255,.06)}
-
-    footer{max-width:1400px;margin:0 auto 40px;padding:0 16px;color:#94a3b8}
-    footer .note{opacity:.8;font-size:12px;text-align:center}
-
-    .empty-state{color:var(--muted);padding:24px;text-align:center}
-  </style>
+  <!-- ================================================================
+       DONATE WIDGET – "Supporta il progetto" (CSS)
+       Blocco completamente autonomo: nessuna dipendenza esterna e
+       nessuna modifica agli stili esistenti del sito.
+       Tutti i selettori sono prefissati con .donate-widget- (o keyframes
+       donate-widget-*) per evitare qualunque collisione.
+       Sezioni: Donate Button / Overlay / Modal / Cards / Animations /
+                Fireworks / Confetti / Responsive / Dark Mode
+       ================================================================ -->
+  <link rel="stylesheet" href="css/donate-widget.css" />
 </head>
 <body>
   <header class="searchbar" role="search">
@@ -257,442 +88,113 @@
     <p class="note">Disclaimer: non si consiglia l'uso di questo sito.</p>
   </footer>
 
+  <!-- ================================================================
+       DONATE WIDGET – "Supporta il progetto" (HTML)
+       Markup autonomo, inserito dopo il footer: elementi fissi/modali
+       che non alterano il layout esistente del sito.
+       ================================================================ -->
+
+  <!-- Floating Donate Button -->
+  <button id="donateWidgetFab" class="donate-widget-fab" type="button"
+          aria-haspopup="dialog" aria-controls="donateWidgetModal">
+    <span class="donate-widget-fab-inner">☕ Supporta il progetto</span>
+  </button>
+
+  <!-- Modal principale -->
+  <dialog id="donateWidgetModal" class="donate-widget-modal" role="dialog"
+          aria-modal="true" aria-labelledby="donateWidgetTitle">
+    <div class="donate-widget-box">
+      <button id="donateWidgetClose" class="donate-widget-close" type="button" aria-label="Chiudi">×</button>
+      <h2 id="donateWidgetTitle" class="donate-widget-title">❤️ Ti è stato utile il sito?</h2>
+      <p class="donate-widget-text">
+        Se ti ha fatto risparmiare tempo o ti è stato utile,<br>
+        puoi offrirmi un caffè per aiutarmi a mantenerlo online.
+      </p>
+      <p id="donateWidgetPhrase" class="donate-widget-phrase"></p>
+      <div id="donateWidgetEgg" class="donate-widget-egg" hidden></div>
+
+      <div class="donate-widget-cards">
+        <button class="donate-widget-card" type="button"
+                data-donate-url="https://py.pl/A66aWtLq5Fht0uUfN2jVxg">
+          <span class="donate-widget-card-emoji" aria-hidden="true">🪙</span>
+          <span class="donate-widget-card-amount">0,50€</span>
+          <span class="donate-widget-card-desc">Ho trovato due monetine.</span>
+        </button>
+
+        <button class="donate-widget-card donate-widget-card--star" type="button"
+                data-donate-url="https://py.pl/kkgXjZQxoewp8crE5sBvIw">
+          <span class="donate-widget-badge">⭐ Consigliato</span>
+          <span class="donate-widget-card-emoji" aria-hidden="true">☕</span>
+          <span class="donate-widget-card-amount">1€</span>
+          <span class="donate-widget-card-desc">Un caffè.<br>La scelta perfetta.</span>
+        </button>
+
+        <button class="donate-widget-card" type="button"
+                data-donate-url="https://py.pl/uEw5mFCfrfxyiIRs3Uqicg">
+          <span class="donate-widget-card-emoji" aria-hidden="true">🚀</span>
+          <span class="donate-widget-card-amount">2€</span>
+          <span class="donate-widget-card-desc">Oggi mi sento generoso.</span>
+        </button>
+
+        <button id="donateWidgetFive" class="donate-widget-card donate-widget-card--legend" type="button">
+          <span class="donate-widget-card-emoji" aria-hidden="true">👑</span>
+          <span class="donate-widget-card-amount">5€</span>
+          <span class="donate-widget-card-desc">Modalità Leggenda</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Modal speciale 5€ (fullscreen) -->
+  <dialog id="donateWidgetMega" class="donate-widget-mega" role="dialog"
+          aria-modal="true" aria-labelledby="donateWidgetMegaTitle">
+    <!-- Strati decorativi (fuochi d'artificio, coriandoli, emoji) -->
+    <div id="donateWidgetFwLeft" class="donate-widget-fireworks donate-widget-fireworks--left" aria-hidden="true"></div>
+    <div id="donateWidgetFwRight" class="donate-widget-fireworks donate-widget-fireworks--right" aria-hidden="true"></div>
+    <div id="donateWidgetConfetti" class="donate-widget-confetti" aria-hidden="true"></div>
+    <div class="donate-widget-mega-emojis" aria-hidden="true">
+      <span style="top:8%;left:6%">🥹</span>
+      <span style="top:16%;left:88%">🚀</span>
+      <span style="top:72%;left:7%">🦄</span>
+      <span style="top:78%;left:88%">🐐</span>
+      <span style="top:45%;left:4%">❤️</span>
+      <span style="top:42%;left:92%">✨</span>
+      <span style="top:5%;left:48%">🎉</span>
+    </div>
+
+    <div class="donate-widget-mega-box">
+      <h2 id="donateWidgetMegaTitle" class="donate-widget-mega-title">
+        <span aria-hidden="true">🚨🚨🚨</span>
+        SEI SICURO?!
+        <span aria-hidden="true">🚨🚨🚨</span>
+      </h2>
+      <p class="donate-widget-mega-text">Stai davvero pensando di offrirmi <strong>CINQUE EURO</strong>?</p>
+      <p class="donate-widget-mega-spell">Cinque.<br>5.<br><span class="donate-widget-mega-spelled">C-I-N-Q-U-E.</span></p>
+      <p class="donate-widget-mega-text">Non so come ringraziarti.</p>
+
+      <div id="donateWidgetCountdown" class="donate-widget-countdown" aria-live="polite"></div>
+
+      <div class="donate-widget-mega-actions">
+        <button id="donateWidgetMegaYes" class="donate-widget-mega-yes" type="button">🚀 SI, CONTINUA!</button>
+        <button id="donateWidgetMegaNo" class="donate-widget-mega-no" type="button">No dai...<br>torno povero.</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Overlay di ringraziamento (mostrato ~600ms prima di aprire PayPal) -->
+  <div id="donateWidgetThanks" class="donate-widget-thanks" aria-hidden="true">Grazie davvero ❤️</div>
+  <!-- ============================ fine DONATE WIDGET (HTML) ============================ -->
+
   <!-- pdf-lib for single-file PDF creation -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
-  <script>
-    // ---- State ----
-    let ALL_CARDS = [];
-    let FILTERED = [];
-    const BASKET = new Map(); // key: card.id, value: {card, qty}
+  <script src="js/main.js"></script>
 
-    // Utility: debounce
-    function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); } }
-
-    // Su mobile usiamo la qualità "normal" (media) invece di "small": display retina più nitidi.
-    const MOBILE_MQ = window.matchMedia('(max-width: 720px)');
-    function thumbUrl(card){
-      return MOBILE_MQ.matches ? (card.__normal || card.__small) : card.__small;
-    }
-
-    function renderSkeletons(n = 12){
-      const wrap = document.getElementById('cardsList');
-      wrap.innerHTML = '';
-      const frag = document.createDocumentFragment();
-      for(let i=0;i<n;i++){
-        const s = document.createElement('div');
-        s.className = 'skeleton';
-        frag.appendChild(s);
-      }
-      wrap.appendChild(frag);
-    }
-
-    // ---- Data Loading (provided snippet adapted) ----
-    async function loadData() {
-      renderSkeletons();
-      try {
-        const setsResponse = await fetch('https://api.lorcast.com/v0/sets', { headers: { 'Accept': 'application/json' } });
-        if (!setsResponse.ok) throw new Error(`Errore HTTP ${setsResponse.status}`);
-        const setsData = await setsResponse.json();
-        let sets = (setsData.results || []).filter(s => /^(?:13|12|11|10|9|8|7|6|5|4|3|2|1)$/.test(String(s.code)));
-        // Order 13 -> 1
-        sets.sort((a,b)=> Number(b.code) - Number(a.code));
-
-        const cardsPromises = sets.map(set =>
-          fetch(`https://api.lorcast.com/v0/sets/${set.code}/cards`, { headers: { 'Accept': 'application/json' } })
-            .then(res => { if (!res.ok) throw new Error(`Errore caricamento set ${set.code}`); return res.json(); })
-            .catch(err => { console.warn('Errore singolo set:', set.code, err); return []; })
-        );
-
-        const cardsArrays = await Promise.all(cardsPromises);
-        const allCards = cardsArrays.flat();
-
-        // Annotate missing fields, ensure image urls
-        ALL_CARDS = allCards
-          .filter(c => c && c.image_uris && c.image_uris.digital && c.image_uris.digital.small && c.image_uris.digital.large)
-          .map(c => ({
-            ...c,
-            __setCode: c.set?.code ? String(c.set.code) : '',
-            __setName: c.set?.name || '',
-            __small: c.image_uris.digital.small,
-            __normal: c.image_uris.digital.normal || c.image_uris.digital.small,
-            __large: c.image_uris.digital.large,
-            __full: c.image_uris.digital.full || '',
-            __search: [c.name, c.version, c.text, c.classifications?.join(' '), c.type?.join(' '), c.set?.name].filter(Boolean).join(' ').toLowerCase()
-          }))
-          // Sort by set desc (13->1), then by collector_number asc (numeric-ish)
-          .sort((a,b)=> Number(b.__setCode||0) - Number(a.__setCode||0) || (parseInt(a.collector_number) || 0) - (parseInt(b.collector_number) || 0));
-
-        console.log(`✅ Caricate ${ALL_CARDS.length} carte totali.`);
-        displayCards(ALL_CARDS);
-      } catch (error) {
-        console.error('❌ Errore nel caricamento dei dati:', error);
-        document.getElementById('cardsList').innerHTML = '<div class="empty-state"><p>Errore nel caricamento delle carte</p></div>';
-      }
-    }
-
-    // ---- Rendering ----
-    function displayCards(cards){
-      FILTERED = cards;
-      const wrap = document.getElementById('cardsList');
-      const count = document.getElementById('resultCount');
-      wrap.innerHTML = '';
-      count.textContent = `${cards.length} risultati`;
-      const frag = document.createDocumentFragment();
-      if(cards.length === 0){
-        wrap.innerHTML = '<div class="empty-state">Nessun risultato.<br><span style="font-size:12px;opacity:.7">Prova a modificare i filtri.</span></div>';
-        return;
-      }
-      cards.forEach(card => {
-        const el = document.createElement('article');
-        el.className = 'card';
-        el.dataset.cardId = card.id;
-        const inBasketQty = BASKET.get(card.id)?.qty || 0;
-        const inkName = card.ink || '';
-        const inkDot = inkName ? `<span class="ink-dot ink-${escapeHtml(inkName)}" title="${escapeHtml(inkName)}"></span>` : '';
-        el.innerHTML = `
-          ${inBasketQty ? `<span class="basket-badge" data-badge>×${inBasketQty}</span>` : ''}
-          <img src="${thumbUrl(card)}" alt="${escapeHtml(card.name)}" loading="lazy"/>
-          <div class="meta">
-            <div class="title">${escapeHtml(card.name)}${card.version?` — ${escapeHtml(card.version)}`:''}</div>
-            <div class="sub">${inkDot}<span>${escapeHtml(inkName || 'No Ink')} • Cost ${card.cost ?? '-'} • Set ${card.__setCode}</span></div>
-            <div class="tags">
-              ${card.type?.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')||''}
-            </div>
-            <button class="add">Aggiungi</button>
-          </div>`;
-        if(inBasketQty) el.classList.add('in-basket');
-        const addBtn = el.querySelector('button.add');
-        addBtn.addEventListener('click', ()=> {
-          addToBasket(card);
-          addBtn.classList.remove('added');
-          void addBtn.offsetWidth;
-          addBtn.classList.add('added');
-          addBtn.textContent = 'Aggiunto ✓';
-          clearTimeout(addBtn._t);
-          addBtn._t = setTimeout(()=>{ addBtn.classList.remove('added'); addBtn.textContent = 'Aggiungi'; }, 900);
-        });
-        frag.appendChild(el);
-      });
-      wrap.appendChild(frag);
-    }
-
-    function updateCatalogBadges(){
-      document.querySelectorAll('.card[data-card-id]').forEach(el => {
-        const id = el.dataset.cardId;
-        const qty = BASKET.get(id)?.qty || 0;
-        const existing = el.querySelector('[data-badge]');
-        if(qty > 0){
-          el.classList.add('in-basket');
-          if(existing) existing.textContent = `×${qty}`;
-          else {
-            const b = document.createElement('span');
-            b.className = 'basket-badge';
-            b.dataset.badge = '';
-            b.textContent = `×${qty}`;
-            el.appendChild(b);
-          }
-        } else {
-          el.classList.remove('in-basket');
-          existing?.remove();
-        }
-      });
-    }
-
-    // PDF grid: 9 carte per pagina A4 (3 col × 3 righe alle dimensioni reali)
-    const PDF_PER_PAGE = 9;
-
-    function refreshSelectionViews(){
-      const selList = document.getElementById('selList');
-      const modalSel = document.getElementById('modalSelList');
-      const countSel = document.getElementById('countSel');
-      const fab = document.getElementById('openBasket');
-      const clearBtn = document.getElementById('clearBasket');
-      const pdfBtn = document.getElementById('makePdfBtn');
-      const pdfHint = document.getElementById('pdfHint');
-
-      const items = Array.from(BASKET.values());
-      const totalQty = items.reduce((a,b)=>a+b.qty,0);
-      const pages = Math.max(1, Math.ceil(totalQty / PDF_PER_PAGE));
-
-      countSel.textContent = totalQty === 1 ? '1 carta' : `${totalQty} carte`;
-      fab.textContent = `Lista (${totalQty})`;
-      clearBtn.style.display = items.length ? '' : 'none';
-      pdfBtn.disabled = items.length === 0;
-      pdfHint.textContent = items.length === 0
-        ? 'Aggiungi almeno una carta'
-        : `${totalQty} ${totalQty===1?'carta':'carte'} • ~${pages} ${pages===1?'pagina':'pagine'} A4`;
-
-      function renderInto(container){
-        container.innerHTML='';
-        if(items.length===0){
-          container.innerHTML = '<div class="empty-state">Nessuna carta nella lista.<br><span style="font-size:12px;opacity:.7">Aggiungi carte dal catalogo a sinistra.</span></div>';
-          return;
-        }
-        items.forEach(entry=>{
-          const {card, qty} = entry;
-          const row = document.createElement('div');
-          row.className = 'item';
-          const inkName = card.ink || '';
-          const inkDot = inkName ? `<span class="ink-dot ink-${escapeHtml(inkName)}"></span>` : '';
-          row.innerHTML = `
-            <img src="${thumbUrl(card)}" alt="${escapeHtml(card.name)}"/>
-            <div class="info">
-              <div class="name">${escapeHtml(card.name)} ${card.version?`<span class="muted">— ${escapeHtml(card.version)}</span>`:''}</div>
-              <div class="muted" style="display:flex;align-items:center;gap:6px">${inkDot}<span>Set ${card.__setCode} • Cost ${card.cost ?? '-'}</span></div>
-            </div>
-            <div class="qty">
-              <button aria-label="Diminuisci" ${qty<=1?'disabled':''}>−</button>
-              <span>${qty}</span>
-              <button aria-label="Aumenta" ${qty>=4?'disabled':''}>+</button>
-              <button class="trash" title="Rimuovi" aria-label="Rimuovi">×</button>
-            </div>`;
-          const [btnMinus, spanQty, btnPlus, btnTrash] = row.querySelectorAll('.qty > *');
-          btnMinus.addEventListener('click',()=>{
-            entry.qty = Math.max(1, entry.qty-1);
-            refreshSelectionViews();
-          });
-          btnPlus.addEventListener('click',()=>{
-            entry.qty = Math.min(4, entry.qty+1);
-            refreshSelectionViews();
-          });
-          btnTrash.addEventListener('click',()=>{
-            BASKET.delete(card.id);
-            refreshSelectionViews();
-          });
-          container.appendChild(row);
-        });
-      }
-
-      renderInto(selList);
-      renderInto(modalSel);
-      updateCatalogBadges();
-    }
-
-    function addToBasket(card){
-      const cur = BASKET.get(card.id);
-      if(cur){ cur.qty = Math.min(8, cur.qty+1); }
-      else { BASKET.set(card.id, {card, qty:1}); }
-      refreshSelectionViews();
-    }
-
-    // ---- Filters & Search ----
-    function applyFilters(){
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const ink = document.getElementById('inkFilter').value;
-      const minRaw = document.getElementById('minCost').value;
-      const maxRaw = document.getElementById('maxCost').value;
-      const minC = Number(minRaw);
-      const maxC = Number(maxRaw);
-
-      let out = ALL_CARDS;
-      if(ink){ out = out.filter(c => c.ink === ink); }
-      if(minRaw !== '' && !Number.isNaN(minC)){ out = out.filter(c => (c.cost ?? Infinity) >= minC); }
-      if(maxRaw !== '' && !Number.isNaN(maxC)){ out = out.filter(c => (c.cost ?? -Infinity) <= maxC); }
-      if(q){ out = out.filter(c => c.__search.includes(q)); }
-
-      const anyFilter = !!(q || ink || minRaw !== '' || maxRaw !== '');
-      document.getElementById('clearFilters').style.display = anyFilter ? '' : 'none';
-
-      displayCards(out);
-    }
-
-    function clearAllFilters(){
-      document.getElementById('searchInput').value = '';
-      document.getElementById('inkFilter').value = '';
-      document.getElementById('minCost').value = '';
-      document.getElementById('maxCost').value = '';
-      applyFilters();
-    }
-
-    const debouncedApply = debounce(applyFilters, 200);
-
-    // ---- PDF Generation ----
-    // Card dimensions and spacing in mm
-    const MM_TO_PT = 72 / 25.4;
-    const CARD_W_MM = 63.5;
-    const CARD_H_MM = 88.9;
-    const GAP_MM = 0.2;
-
-    async function generatePDF(ev){
-      console.log('[PDF] Click ricevuto, avvio generazione…');
-      const items = Array.from(BASKET.values());
-      if(items.length===0){ alert('Aggiungi almeno una carta alla lista.'); return; }
-
-      const btns = [document.getElementById('makePdfBtn'), document.getElementById('makePdfBtnMobile')].filter(Boolean);
-      const originalText = btns[0]?.textContent;
-      const setBtns = (txt, disabled) => btns.forEach(b => { b.textContent = txt; b.disabled = disabled; });
-      setBtns('Preparazione…', true);
-
-      try {
-        await _generatePDF(items, (done, total) => setBtns(`Generazione PDF ${done}/${total}…`, true));
-        setBtns('PDF creato ✓', false);
-        setTimeout(()=> setBtns(originalText, false), 2500);
-      } catch (err) {
-        console.error('[PDF] Errore:', err);
-        alert('Errore durante la generazione del PDF:\n' + (err?.message || err));
-        setBtns(originalText, false);
-      }
-    }
-
-    async function _generatePDF(items, onProgress){
-      if(typeof PDFLib === 'undefined'){
-        throw new Error('Libreria pdf-lib non caricata (controlla la connessione o il blocco script).');
-      }
-      const { PDFDocument, StandardFonts, rgb } = PDFLib;
-      const pdfDoc = await PDFDocument.create();
-
-      // Use A4 size in points
-      const A4 = { w: 595.28, h: 841.89 };
-      const marginPt = 8 * MM_TO_PT; // 5mm margin: necessario per far stare 3 colonne da 63.5mm su A4
-
-      // Lorcast serves AVIF without CORS headers, and pdf-lib supports only JPG/PNG.
-      // Workaround: route every image through images.weserv.nl, a public proxy
-      // that (a) adds CORS headers and (b) re-encodes the source to JPEG via &output=jpg.
-      // Fallback: if the proxy fails, load the original in an <img> and convert via canvas.
-      function getSourceImageUrl(card){
-        const digital = card.image_uris?.digital || {};
-        return digital.large || digital.normal || digital.small
-            || card.__large || card.__small || '';
-      }
-
-      function getProxiedJpegUrl(sourceUrl){
-        const stripped = sourceUrl.replace(/^https?:\/\//, '');
-        return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&output=jpg&q=92`;
-      }
-
-      async function fetchAsArrayBuffer(url, timeoutMs = 15000){
-        const ctl = new AbortController();
-        const timer = setTimeout(()=> ctl.abort(), timeoutMs);
-        try {
-          const res = await fetch(url, { cache: 'force-cache', signal: ctl.signal });
-          if(!res.ok) throw new Error(`HTTP ${res.status}`);
-          return await res.arrayBuffer();
-        } finally { clearTimeout(timer); }
-      }
-
-      function loadImageAsJpegBytes(url, timeoutMs = 15000){
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.decoding = 'async';
-          const timer = setTimeout(()=> { img.src = ''; reject(new Error('Timeout caricamento immagine')); }, timeoutMs);
-          img.onload = () => {
-            clearTimeout(timer);
-            try {
-              const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              canvas.getContext('2d').drawImage(img, 0, 0);
-              canvas.toBlob(async (blob) => {
-                if (!blob) { reject(new Error('toBlob nullo')); return; }
-                try { resolve(await blob.arrayBuffer()); }
-                catch (e) { reject(e); }
-              }, 'image/jpeg', 0.92);
-            } catch (e) { reject(e); }
-          };
-          img.onerror = () => { clearTimeout(timer); reject(new Error('Image load error: ' + url)); };
-          img.src = url;
-        });
-      }
-
-      async function embedCardImage(pdfDoc, card){
-        const source = getSourceImageUrl(card);
-        if(!source) throw new Error('URL immagine non trovato');
-
-        // Primary path: proxy that returns JPEG with CORS headers.
-        try {
-          const bytes = await fetchAsArrayBuffer(getProxiedJpegUrl(source));
-          return await pdfDoc.embedJpg(bytes);
-        } catch (proxyErr) {
-          console.warn('Proxy weserv fallito, provo canvas fallback:', proxyErr);
-        }
-
-        // Fallback: load original via <img>, then re-encode via canvas.
-        const bytes = await loadImageAsJpegBytes(source);
-        return await pdfDoc.embedJpg(bytes);
-      }
-
-
-      const cardPts = { w: CARD_W_MM * MM_TO_PT, h: CARD_H_MM * MM_TO_PT };
-      const gapPt = GAP_MM * MM_TO_PT;
-
-      // Compute grid per page
-      const usableW = A4.w - marginPt*2;
-      const usableH = A4.h - marginPt*2;
-      const cols = Math.max(1, Math.floor((usableW + gapPt) / (cardPts.w + gapPt)));
-      const rows = Math.max(1, Math.floor((usableH + gapPt) / (cardPts.h + gapPt)));
-      const perPage = cols * rows;
-
-      // Build a flat list with duplicates based on qty
-      const flat = [];
-      for(const {card, qty} of items){ for(let i=0;i<qty;i++) flat.push(card); }
-
-      let page, x0, y0;
-      for(let i=0;i<flat.length;i++){
-        if(i % perPage === 0){
-          page = pdfDoc.addPage([A4.w, A4.h]);
-          x0 = marginPt; y0 = A4.h - marginPt - cardPts.h; // start top-left
-        }
-        const idxOnPage = i % perPage;
-        const r = Math.floor(idxOnPage / cols);
-        const c = idxOnPage % cols;
-        const x = x0 + c * (cardPts.w + gapPt);
-        const y = y0 - r * (cardPts.h + gapPt);
-
-        onProgress?.(i + 1, flat.length);
-        try {
-          const image = await embedCardImage(pdfDoc, flat[i]);
-          page.drawImage(image, { x, y, width: cardPts.w, height: cardPts.h });
-        } catch (e) {
-          console.warn('[PDF] Carta saltata:', flat[i].name, e);
-          page.drawRectangle({ x, y, width: cardPts.w, height: cardPts.h, borderWidth: 1, borderColor: rgb(0.7, 0.7, 0.7) });
-          page.drawText('Immagine non disponibile', { x: x + 8, y: y + cardPts.h / 2, size: 9, color: rgb(0.2, 0.2, 0.2) });
-        }
-      }
-
-      console.log('[PDF] Salvataggio documento…');
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], {type:'application/pdf'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'LorcanaPrint.pdf';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=> URL.revokeObjectURL(url), 2000);
-    }
-
-    // ---- Events ----
-    document.getElementById('searchInput').addEventListener('input', debouncedApply);
-    document.getElementById('inkFilter').addEventListener('change', applyFilters);
-    document.getElementById('minCost').addEventListener('input', debouncedApply);
-    document.getElementById('maxCost').addEventListener('input', debouncedApply);
-
-    document.getElementById('makePdfBtn').addEventListener('click', generatePDF);
-    document.getElementById('makePdfBtnMobile').addEventListener('click', generatePDF);
-    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
-    document.getElementById('clearBasket').addEventListener('click', ()=>{
-      if(BASKET.size === 0) return;
-      if(confirm('Svuotare l\'intera lista?')){
-        BASKET.clear();
-        refreshSelectionViews();
-      }
-    });
-
-    const modal = document.getElementById('basketModal');
-    document.getElementById('openBasket').addEventListener('click', ()=>{ modal.showModal(); });
-    document.getElementById('closeModal').addEventListener('click', ()=> modal.close());
-
-    // ---- Helpers ----
-    function escapeHtml(s){
-      return String(s||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-    }
-
-    // Kick off
-    loadData();
-  </script>
+  <!-- ================================================================
+       DONATE WIDGET – "Supporta il progetto" (JavaScript)
+       Modulo autonomo in IIFE: nessuna variabile globale, nessuna
+       interazione con la logica esistente del sito.
+       ================================================================ -->
+  <script src="js/donate-widget.js"></script>
 </body>
 </html>

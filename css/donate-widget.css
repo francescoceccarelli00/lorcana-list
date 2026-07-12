@@ -1,0 +1,293 @@
+/* ---------- Donate Button ---------- */
+.donate-widget-fab{
+  position:fixed;right:18px;bottom:18px;z-index:80;
+  border:0;border-radius:999px;cursor:pointer;
+  padding:13px 20px;
+  font-family:inherit;font-size:14px;font-weight:800;line-height:1;
+  color:#0b0e15;
+  background:linear-gradient(135deg,var(--brand),var(--accent));
+  box-shadow:0 10px 25px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.08);
+  transition:transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+.donate-widget-fab:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.08);box-shadow:0 14px 30px rgba(0,0,0,.45)}
+.donate-widget-fab:active{transform:scale(.96)}
+.donate-widget-fab:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+/* il "bounce" periodico vive sullo span interno, così non entra in
+   conflitto con il transform dell'hover sul bottone */
+.donate-widget-fab-inner{
+  display:inline-flex;align-items:center;gap:8px;
+  animation:donate-widget-bounce 26s ease-in-out 8s infinite;
+}
+
+/* ---------- Overlay ---------- */
+.donate-widget-modal::backdrop,
+.donate-widget-mega::backdrop{
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+
+/* ---------- Modal (principale) ---------- */
+.donate-widget-modal{
+  border:1px solid rgba(255,255,255,.08);border-radius:20px;
+  background:var(--panel);color:var(--fg);
+  padding:0;width:min(94vw,620px);max-height:90dvh;
+  box-shadow:0 25px 60px rgba(0,0,0,.5);
+}
+.donate-widget-modal[open]{animation:donate-widget-pop .25s ease}
+.donate-widget-box{position:relative;padding:26px 24px 24px;overflow:auto;max-height:90dvh}
+.donate-widget-close{
+  position:absolute;top:12px;right:12px;
+  width:34px;height:34px;border-radius:10px;cursor:pointer;
+  background:transparent;border:1px solid rgba(255,255,255,.12);
+  color:var(--muted);font-size:18px;line-height:1;font-family:inherit;
+  transition:all .15s ease;
+}
+.donate-widget-close:hover{color:var(--fg);border-color:rgba(255,255,255,.25)}
+.donate-widget-title{margin:0 24px 10px 0;font-size:22px;font-weight:900;letter-spacing:.3px}
+.donate-widget-text{margin:0 0 6px;color:var(--fg);opacity:.9;font-size:14px;line-height:1.5}
+.donate-widget-phrase{margin:0 0 16px;color:var(--muted);font-size:13px;font-style:italic}
+.donate-widget-egg{
+  margin:0 auto 16px;padding:8px 14px;width:max-content;max-width:100%;
+  border-radius:999px;text-align:center;
+  background:rgba(244,183,64,.12);border:1px solid rgba(244,183,64,.4);
+  color:#f4b740;font-size:13px;font-weight:700;
+  animation:donate-widget-egg-pop .45s cubic-bezier(.3,1.6,.6,1);
+}
+
+/* ---------- Cards ---------- */
+.donate-widget-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:6px}
+.donate-widget-card{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:18px 14px 16px;cursor:pointer;text-align:center;
+  background:#0b0e15;border:1px solid rgba(255,255,255,.08);border-radius:14px;
+  color:var(--fg);font-family:inherit;
+  box-shadow:var(--card-shadow);
+  transition:transform .15s ease, border-color .15s ease, filter .15s ease;
+}
+.donate-widget-card:hover{transform:translateY(-3px);border-color:rgba(110,231,255,.35);filter:brightness(1.08)}
+.donate-widget-card:active{transform:scale(.97)}
+.donate-widget-card:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.donate-widget-card-emoji{font-size:30px;line-height:1}
+.donate-widget-card-amount{font-size:20px;font-weight:900}
+.donate-widget-card-desc{font-size:12px;color:var(--muted);line-height:1.35}
+/* card 1€ – consigliata: più grande, glow pulsante, badge */
+.donate-widget-card--star{
+  border-color:rgba(110,231,255,.5);
+  animation:donate-widget-glow 2.4s ease-in-out infinite;
+}
+.donate-widget-card--star .donate-widget-card-desc{color:var(--fg);opacity:.85}
+.donate-widget-badge{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  padding:3px 10px;border-radius:999px;white-space:nowrap;
+  background:linear-gradient(135deg,var(--brand),var(--accent));
+  color:#0b0e15;font-size:11px;font-weight:900;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+/* card 5€ – Modalità Leggenda: oro (ambra già presente nel sito) + sparkle */
+.donate-widget-card--legend{
+  background:linear-gradient(160deg,#1a1508,#0b0e15 70%);
+  border-color:rgba(244,183,64,.55);
+}
+.donate-widget-card--legend .donate-widget-card-amount{color:#f4b740}
+.donate-widget-card--legend:hover{border-color:rgba(244,183,64,.9)}
+.donate-widget-card--legend::before,
+.donate-widget-card--legend::after{
+  content:"✨";position:absolute;font-size:14px;pointer-events:none;
+  animation:donate-widget-twinkle 1.6s ease-in-out infinite;
+}
+.donate-widget-card--legend::before{top:8px;left:10px}
+.donate-widget-card--legend::after{bottom:8px;right:10px;animation-delay:.8s}
+
+/* ---------- Animations ---------- */
+@keyframes donate-widget-bounce{
+  0%,6%,100%{transform:translateY(0)}
+  2%{transform:translateY(-9px)}
+  4%{transform:translateY(0)}
+  5%{transform:translateY(-4px)}
+}
+@keyframes donate-widget-pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes donate-widget-glow{
+  0%,100%{transform:scale(1.05);box-shadow:0 0 14px rgba(110,231,255,.22)}
+  50%{transform:scale(1.08);box-shadow:0 0 26px rgba(167,139,250,.45)}
+}
+@keyframes donate-widget-twinkle{
+  0%,100%{opacity:.2;transform:scale(.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
+@keyframes donate-widget-egg-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes donate-widget-float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-16px)}
+}
+@keyframes donate-widget-alarm{
+  0%,100%{transform:scale(1) rotate(0deg)}
+  25%{transform:scale(1.04) rotate(-.6deg)}
+  50%{transform:scale(1) rotate(.6deg)}
+  75%{transform:scale(1.04) rotate(-.4deg)}
+}
+@keyframes donate-widget-mega-in{
+  0%{opacity:0;transform:scale(.7)}
+  60%{opacity:1;transform:scale(1.03)}
+  72%{transform:scale(1.01) translateX(-4px)}
+  84%{transform:scale(1) translateX(4px)}
+  100%{opacity:1;transform:scale(1) translateX(0)}
+}
+@keyframes donate-widget-num-pop{
+  0%{opacity:0;transform:scale(1.7)}
+  35%{opacity:1;transform:scale(1)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes donate-widget-yes-pulse{
+  0%,100%{transform:scale(1);box-shadow:0 0 16px rgba(110,231,255,.3)}
+  50%{transform:scale(1.05);box-shadow:0 0 30px rgba(167,139,250,.55)}
+}
+@keyframes donate-widget-thanks-anim{
+  0%{opacity:0;transform:scale(.9)}
+  20%{opacity:1;transform:scale(1)}
+  80%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.02)}
+}
+
+/* ---------- Modal 5€ (fullscreen) ---------- */
+.donate-widget-mega{
+  border:0;margin:0;padding:0;
+  width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;
+  background:rgba(10,12,18,.94);color:var(--fg);overflow:hidden;
+}
+.donate-widget-mega[open]{animation:donate-widget-mega-in .5s cubic-bezier(.2,.9,.3,1.1)}
+.donate-widget-mega-box{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:24px;text-align:center;overflow:auto;
+}
+.donate-widget-mega-title{
+  margin:0 0 8px;font-size:clamp(26px,5.5vw,54px);font-weight:900;letter-spacing:1px;
+  animation:donate-widget-alarm 1.2s ease-in-out infinite;
+}
+.donate-widget-mega-title span{display:block;font-size:.55em}
+.donate-widget-mega-text{margin:4px 0;font-size:clamp(15px,2.4vw,19px);opacity:.95}
+.donate-widget-mega-text strong{color:#f4b740}
+.donate-widget-mega-spell{margin:4px 0;font-size:clamp(16px,2.6vw,22px);font-weight:800;line-height:1.6}
+.donate-widget-mega-spelled{color:var(--brand);letter-spacing:3px}
+.donate-widget-countdown{min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:8px 0}
+.donate-widget-countdown-label{font-size:15px;color:var(--muted);font-style:italic}
+.donate-widget-countdown-num{
+  display:block;font-size:clamp(42px,8vw,72px);font-weight:900;color:var(--brand);line-height:1.1;
+  animation:donate-widget-num-pop 1s ease;
+}
+.donate-widget-countdown-final{
+  font-size:clamp(20px,3.5vw,30px);font-weight:900;color:var(--accent);
+  animation:donate-widget-num-pop .6s ease;
+}
+.donate-widget-mega-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:6px}
+.donate-widget-mega-yes{
+  border:0;border-radius:999px;cursor:pointer;
+  padding:16px 30px;font-family:inherit;font-size:18px;font-weight:900;
+  color:#0b0e15;background:linear-gradient(135deg,var(--brand),var(--accent));
+  animation:donate-widget-yes-pulse 1.6s ease-in-out infinite;
+  transition:filter .15s ease;
+}
+.donate-widget-mega-yes:hover{filter:brightness(1.12)}
+.donate-widget-mega-yes:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.donate-widget-mega-no{
+  background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:12px;cursor:pointer;
+  padding:10px 18px;font-family:inherit;font-size:13px;color:var(--muted);line-height:1.35;
+  transition:all .15s ease;
+}
+.donate-widget-mega-no:hover{color:var(--fg);border-color:rgba(255,255,255,.3)}
+/* emoji giganti fluttuanti */
+.donate-widget-mega-emojis{position:absolute;inset:0;z-index:1;pointer-events:none}
+.donate-widget-mega-emojis span{
+  position:absolute;font-size:clamp(26px,4.5vw,46px);opacity:.8;
+  animation:donate-widget-float 5.5s ease-in-out infinite;
+}
+.donate-widget-mega-emojis span:nth-child(2n){animation-delay:1.2s;animation-duration:6.5s}
+.donate-widget-mega-emojis span:nth-child(3n){animation-delay:2.4s;animation-duration:7s}
+.donate-widget-mega-emojis span:nth-child(5n){animation-delay:.6s}
+
+/* ---------- Fireworks ---------- */
+.donate-widget-fireworks{position:absolute;top:0;bottom:0;width:26%;z-index:1;pointer-events:none}
+.donate-widget-fireworks--left{left:0}
+.donate-widget-fireworks--right{right:0}
+.donate-widget-fw-burst{position:absolute;width:0;height:0}
+.donate-widget-fw-burst span{
+  position:absolute;left:0;top:0;width:6px;height:6px;border-radius:50%;opacity:0;
+  animation:donate-widget-fw-particle 1.8s ease-out infinite;
+  will-change:transform,opacity;
+}
+/* alcune particelle sono "raggi" allungati */
+.donate-widget-fw-burst span.donate-widget-fw-ray{width:3px;height:14px;border-radius:2px}
+@keyframes donate-widget-fw-particle{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  70%{opacity:.9}
+  100%{transform:translate(var(--dw-x),var(--dw-y)) scale(.2);opacity:0}
+}
+
+/* ---------- Confetti ---------- */
+.donate-widget-confetti{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.donate-widget-confetti-piece{
+  position:absolute;top:-24px;border-radius:2px;opacity:.9;
+  animation:donate-widget-confetti-fall linear infinite;
+  will-change:transform;
+}
+@keyframes donate-widget-confetti-fall{
+  0%{transform:translateY(0) rotate(0deg)}
+  100%{transform:translateY(105vh) rotate(680deg)}
+}
+
+/* ---------- Ringraziamento ---------- */
+.donate-widget-thanks{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(8,10,15,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  font-size:clamp(24px,5vw,42px);font-weight:900;color:var(--fg);
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.donate-widget-thanks--show{
+  visibility:visible;
+  animation:donate-widget-thanks-anim .65s ease forwards;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width:720px){
+  /* su smartphone: searchbar in basso e "Lista (N)" in alto a destra
+     (basket-fab) occupano già quello spazio → mettiamo il bottone
+     in alto a sinistra, libero, così non copre carte né altri controlli */
+  .donate-widget-fab{
+    left:14px;right:auto;bottom:auto;
+    top:calc(env(safe-area-inset-top) + 14px);
+    /* stesso box del bottone "Lista" (basket-fab) per allineamento speculare */
+    padding:12px 16px;font-size:14px;line-height:1.38;
+  }
+  .donate-widget-modal{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;margin:0}
+  .donate-widget-box{max-height:100dvh;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+  .donate-widget-cards{grid-template-columns:1fr;gap:16px}
+  .donate-widget-card{width:100%}
+  .donate-widget-card--star{animation:none;transform:none;box-shadow:0 0 18px rgba(167,139,250,.35)}
+  .donate-widget-mega-actions{width:100%}
+  .donate-widget-mega-yes,.donate-widget-mega-no{width:100%;max-width:420px}
+  .donate-widget-fireworks{width:20%}
+}
+
+/* accessibilità: niente animazioni per chi le ha disattivate */
+@media (prefers-reduced-motion: reduce){
+  .donate-widget-fab-inner,
+  .donate-widget-card--star,
+  .donate-widget-card--legend::before,
+  .donate-widget-card--legend::after,
+  .donate-widget-mega-title,
+  .donate-widget-mega-yes,
+  .donate-widget-mega-emojis span,
+  .donate-widget-fw-burst span,
+  .donate-widget-confetti-piece{animation:none}
+  .donate-widget-modal[open],.donate-widget-mega[open]{animation:none}
+}
+
+/* ---------- Dark Mode ----------
+   Il sito è nativamente dark e non ha un tema chiaro alternativo:
+   il widget riusa direttamente le variabili di tema esistenti
+   (--bg, --panel, --fg, --muted, --brand, --accent) più l'ambra
+   #f4b740 già presente nella palette (ink Amber).
+   Nessun colore estraneo introdotto. */
+
