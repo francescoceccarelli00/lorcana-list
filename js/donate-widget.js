@@ -2,7 +2,7 @@
   'use strict';
 
   /* ---------- Config ---------- */
-  const FIVE_EURO_URL = 'https://py.pl/eyzwMpO5jFVLkRDCzoNxQw';
+  const FIVE_EURO_URL = '    https://paypal.me/fcek31/5';
   const EGG_CHANCE = 0.05; // 5% di probabilità easter egg
   const THANKS_MS = 620;   // durata overlay "Grazie davvero ❤️"
   const PALETTE = ['#6ee7ff','#a78bfa','#f4b740','#10b981','#ef4444']; // colori già usati dal sito
