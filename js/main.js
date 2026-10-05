@@ -32,8 +32,8 @@ async function loadData() {
     const setsResponse = await fetch('https://api.lorcast.com/v0/sets', { headers: { 'Accept': 'application/json' } });
     if (!setsResponse.ok) throw new Error(`Errore HTTP ${setsResponse.status}`);
     const setsData = await setsResponse.json();
-    let sets = (setsData.results || []).filter(s => /^(?:13|12|11|10|9|8|7|6|5|4|3|2|1)$/.test(String(s.code)));
-    // Order 13 -> 1
+    let sets = (setsData.results || []).filter(s => /^(?:14|13|12|11|10|9|8|7|6|5|4|3|2|1)$/.test(String(s.code)));
+    // Order 14 -> 1
     sets.sort((a,b)=> Number(b.code) - Number(a.code));
 
     const cardsPromises = sets.map(set =>
